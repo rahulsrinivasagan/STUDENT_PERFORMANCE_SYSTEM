@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard - Student Performance Analysis System{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2>Welcome, {{ user.username }}!</h2>
+    
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3>Manage Questions</h3>
+            <ul>
+                {% for subject in subjects %}
+                    <li>
+                        {{ subject.name }}
+                        <a href="{{ url_for('teacher.add_mcq', subject_id=subject.id) }}" class="btn btn-small">Add MCQ</a>
+                        <a href="{{ url_for('teacher.add_descriptive', subject_id=subject.id) }}" class="btn btn-small">Add Descriptive</a>
+                        <a href="{{ url_for('teacher.view_submissions', subject_id=subject.id) }}" class="btn btn-small">View Submissions</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="card">
+            <h3>Reports</h3>
+            <a href="{{ url_for('teacher.generate_report', report_type='subject') }}" class="btn btn-primary">Generate Subject Report</a>
+            <a href="{{ url_for('teacher.generate_report', report_type='class') }}" class="btn btn-primary">Generate Class Report</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Student Performance Analysis System{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2>Welcome, {{ user.username }}!</h2>
+    
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3>System Statistics</h3>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="label">Total Students:</span>
+                    <span class="value">{{ stats.students }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Total Teachers:</span>
+                    <span class="value">{{ stats.teachers }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Total Quiz Attempts:</span>
+                    <span class="value">{{ stats.attempts }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Average Score:</span>
+                    <span class="value">{{ stats.avg_score }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>Reports</h3>
+            <a href="{{ url_for('admin.generate_report', report_type='individual') }}" class="btn btn-primary">Individual Reports</a>
+            <a href="{{ url_for('admin.generate_report', report_type='subject') }}" class="btn btn-primary">Subject Reports</a>
+            <a href="{{ url_for('admin.generate_report', report_type='class') }}" class="btn btn-primary">Class Reports</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

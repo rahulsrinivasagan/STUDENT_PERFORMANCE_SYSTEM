@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Select Subjects - Student Performance Analysis System{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Select Your Subjects</h2>
+    <form method="POST">
+        <div class="subjects-grid">
+            {% for subject in subjects %}
+                <div class="subject-item">
+                    <input type="checkbox" id="subject_{{ subject.id }}" name="subjects" value="{{ subject.id }}"
+                           {% if subject.id in selected_ids %}checked{% endif %}>
+                    <label for="subject_{{ subject.id }}">{{ subject.name }}</label>
+                </div>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary">Save Subjects</button>
+    </form>
+</div>
+{% endblock %}

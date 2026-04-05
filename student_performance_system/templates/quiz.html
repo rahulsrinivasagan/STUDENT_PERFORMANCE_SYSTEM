@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz - Student Performance Analysis System{% endblock %}
+
+{% block content %}
+<div class="quiz-container">
+    <h2>Quiz</h2>
+    <form method="POST" id="quiz-form">
+        <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
+        {% if mcq_questions %}
+            <div class="mcq-section">
+                <h3>Multiple Choice Questions</h3>
+                {% for question in mcq_questions %}
+                    <div class="question">
+                        <p><strong>Q{{ loop.index }}:</strong> {{ question.question }}</p>
+                        <div class="options">
+                            {% for option_key, option_value in question.options.items() %}
+                                <label>
+                                    <input type="radio" name="{{ question.id }}" value="{{ option_key }}" required>
+                                    {{ option_key }}. {{ option_value }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% if descriptive_questions %}
+            <div class="descriptive-section">
+                <h3>Descriptive Questions</h3>
+                {% for question in descriptive_questions %}
+                    <div class="question">
+                        <p><strong>Q{{ loop.index + mcq_questions|length }}:</strong> {{ question.question }} ({{ question.marks }} marks)</p>
+                        <div class="upload-section">
+                            <input type="file" id="pdf_{{ question.id }}" name="pdf_{{ question.id }}" accept=".pdf" required>
+                            <button type="button" class="btn btn-small" onclick="uploadPDF({{ question.id }}, {{ attempt_id }})">Upload Answer</button>
+                            <div id="upload-status-{{ question.id }}"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <button type="submit" class="btn btn-primary" id="submit-quiz">Submit Quiz</button>
+    </form>
+</div>
+
+{% block scripts %}
+<script>
+function uploadPDF(questionId, attemptId) {
+    const fileInput = document.getElementById(`pdf_${questionId}`);
+    const statusDiv = document.getElementById(`upload-status-${questionId}`);
+    
+    if (!fileInput.files[0]) {
+        statusDiv.innerHTML = '<p style="color: red;">Please select a PDF file first.</p>';
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('pdf_file', fileInput.files[0]);
+    
+    fetch(`/student/upload_answer/${attemptId}/${questionId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.innerHTML = `<p style="color: green;">Uploaded successfully! Score: ${data.score}</p>`;
+            fileInput.disabled = true;
+        } else {
+            statusDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+        }
+    })
+    .catch(error => {
+        statusDiv.innerHTML = '<p style="color: red;">Upload failed.</p>';
+    });
+}
+</script>
+{% endblock %}
+{% endblock %}

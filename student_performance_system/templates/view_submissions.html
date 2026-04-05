@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}View Submissions - Student Performance Analysis System{% endblock %}
+
+{% block content %}
+<div class="submissions-container">
+    <h2>Student Submissions - {{ subject.name }}</h2>
+    
+    {% if submissions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>MCQ Score</th>
+                    <th>Descriptive Score</th>
+                    <th>Total Score</th>
+                    <th>Attempted At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for submission in submissions %}
+                    <tr>
+                        <td>{{ submission.student }}</td>
+                        <td>{{ submission.mcq_score }}</td>
+                        <td>{{ submission.descriptive_score }}</td>
+                        <td>{{ submission.total_score }}</td>
+                        <td>{{ submission.attempted_at }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No submissions yet for this subject.</p>
+    {% endif %}
+</div>
+{% endblock %}

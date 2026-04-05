@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Result - Student Performance Analysis System{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    <h2>Quiz Result</h2>
+    <div class="result-card">
+        <h3>{{ subject }}</h3>
+        <div class="scores">
+            <div class="score-item">
+                <span class="label">MCQ Score:</span>
+                <span class="value">{{ mcq_score }}</span>
+            </div>
+            <div class="score-item">
+                <span class="label">Descriptive Score:</span>
+                <span class="value">{{ descriptive_score }}</span>
+            </div>
+            <div class="score-item total">
+                <span class="label">Total Score:</span>
+                <span class="value">{{ total_score }}</span>
+            </div>
+        </div>
+        
+        <div class="result-status">
+            {% if total_score >= 50 %}
+                <p class="pass">Congratulations! You passed the quiz.</p>
+            {% else %}
+                <p class="fail">You need to improve. Keep practicing!</p>
+            {% endif %}
+        </div>
+        
+        <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

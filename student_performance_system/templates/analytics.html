@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Student Performance Analysis System{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <h2>Performance Analytics</h2>
+    
+    {% if role == 'student' %}
+        <div class="chart-container">
+            <canvas id="performanceChart"></canvas>
+        </div>
+        
+        <div class="stats-grid">
+            {% for item in data %}
+                <div class="stat-card">
+                    <h3>{{ item.subject }}</h3>
+                    <p>Average Score: {{ "%.1f"|format(item.avg_score) }}</p>
+                    <p>Attempts: {{ item.attempts }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% elif role == 'teacher' %}
+        <div class="chart-container">
+            <canvas id="teacherChart"></canvas>
+        </div>
+        
+        <div class="stats-grid">
+            {% for item in data %}
+                <div class="stat-card">
+                    <h3>{{ item.subject }}</h3>
+                    <p>Students: {{ item.students }}</p>
+                    <p>Average Score: {{ "%.1f"|format(item.avg_score) }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% elif role == 'admin' %}
+        <div class="chart-container">
+            <canvas id="adminChart"></canvas>
+        </div>
+        
+        <div class="stats-grid">
+            {% for item in data %}
+                <div class="stat-card">
+                    <h3>{{ item.subject }}</h3>
+                    <p>Total Attempts: {{ item.total_attempts }}</p>
+                    <p>Average Score: {{ "%.1f"|format(item.avg_score) }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+{% block scripts %}
+<script>
+{% if role == 'student' %}
+const studentData = {{ data|tojson }};
+const ctx = document.getElementById('performanceChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: studentData.map(d => d.subject),
+        datasets: [{
+            label: 'Average Score',
+            data: studentData.map(d => d.avg_score),
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+{% elif role == 'teacher' %}
+const teacherData = {{ data|tojson }};
+const ctx = document.getElementById('teacherChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: teacherData.map(d => d.subject),
+        datasets: [{
+            label: 'Average Student Score',
+            data: teacherData.map(d => d.avg_score),
+            backgroundColor: 'rgba(75, 192, 192, 0.5)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 2,
+            fill: false
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+{% elif role == 'admin' %}
+const adminData = {{ data|tojson }};
+const ctx = document.getElementById('adminChart').getContext('2d');
+new Chart(ctx, {
+    type: 'pie',
+    data: {
+        labels: adminData.map(d => d.subject),
+        datasets: [{
+            label: 'Total Attempts',
+            data: adminData.map(d => d.total_attempts),
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.5)',
+                'rgba(54, 162, 235, 0.5)',
+                'rgba(255, 205, 86, 0.5)',
+                'rgba(75, 192, 192, 0.5)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 205, 86, 1)',
+                'rgba(75, 192, 192, 1)'
+            ],
+            borderWidth: 1
+        }]
+    }
+});
+{% endif %}
+</script>
+{% endblock %}
+{% endblock %}
