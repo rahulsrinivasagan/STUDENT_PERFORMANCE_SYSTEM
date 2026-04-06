@@ -3,34 +3,46 @@
 {% block title %}Quiz Result - Student Performance Analysis System{% endblock %}
 
 {% block content %}
-<div class="result-container">
-    <h2>Quiz Result</h2>
-    <div class="result-card">
-        <h3>{{ subject }}</h3>
-        <div class="scores">
-            <div class="score-item">
-                <span class="label">MCQ Score:</span>
-                <span class="value">{{ mcq_score }}</span>
-            </div>
-            <div class="score-item">
-                <span class="label">Descriptive Score:</span>
-                <span class="value">{{ descriptive_score }}</span>
-            </div>
-            <div class="score-item total">
-                <span class="label">Total Score:</span>
-                <span class="value">{{ total_score }}</span>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="card-title mb-1">Quiz Result</h2>
+                        <p class="text-muted">Subject: {{ subject }}</p>
+                    </div>
+                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary">Dashboard</a>
+                </div>
+                <div class="row text-center g-3 mb-4">
+                    <div class="col-sm-4">
+                        <div class="p-3 rounded-3 bg-light">
+                            <h5>MCQ Score</h5>
+                            <p class="display-6 mb-0">{{ mcq_score }}</p>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="p-3 rounded-3 bg-light">
+                            <h5>Descriptive</h5>
+                            <p class="display-6 mb-0">{{ descriptive_score }}</p>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="p-3 rounded-3 bg-primary text-white">
+                            <h5>Total</h5>
+                            <p class="display-6 mb-0">{{ total_score }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert {{ 'alert-success' if total_score >= 50 else 'alert-warning' }}">
+                    {% if total_score >= 50 %}
+                        <strong>Great job!</strong> You passed the quiz.
+                    {% else %}
+                        <strong>Keep going.</strong> Review the material and try again.
+                    {% endif %}
+                </div>
             </div>
         </div>
-        
-        <div class="result-status">
-            {% if total_score >= 50 %}
-                <p class="pass">Congratulations! You passed the quiz.</p>
-            {% else %}
-                <p class="fail">You need to improve. Keep practicing!</p>
-            {% endif %}
-        </div>
-        
-        <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
     </div>
 </div>
 {% endblock %}

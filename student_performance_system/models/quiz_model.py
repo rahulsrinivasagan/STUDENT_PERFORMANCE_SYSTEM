@@ -1,4 +1,6 @@
 import sqlite3
+import pandas as pd
+from io import BytesIO
 
 class QuizModel:
     def __init__(self, db_path='database.db'):
@@ -200,44 +202,56 @@ class QuizModel:
     
     def generate_report(self, report_type, filters=None):
         """Generate Excel report"""
-        conn = sqlite3.connect(self.db_path)
-        
-        if report_type == 'individual':
-            query = """
-                SELECT u.username, s.name, qa.mcq_score, qa.descriptive_score, qa.total_score, qa.attempted_at
-                FROM quiz_attempts qa
-                JOIN users u ON qa.student_id = u.id
-                JOIN subjects s ON qa.subject_id = s.id
-                WHERE qa.status = 'completed'
-            """
-            if filters and 'student_id' in filters:
-                query += f" AND qa.student_id = {filters['student_id']}"
-        
-        elif report_type == 'subject':
-            query = """
-                SELECT s.name, u.username, qa.mcq_score, qa.descriptive_score, qa.total_score, qa.attempted_at
-                FROM quiz_attempts qa
-                JOIN users u ON qa.student_id = u.id
-                JOIN subjects s ON qa.subject_id = s.id
-                WHERE qa.status = 'completed'
-            """
-            if filters and 'subject_id' in filters:
-                query += f" AND qa.subject_id = {filters['subject_id']}"
-        
-        elif report_type == 'class':
-            query = """
-                SELECT s.name, COUNT(qa.id) as attempts, AVG(qa.total_score) as avg_score, MIN(qa.total_score) as min_score, MAX(qa.total_score) as max_score
-                FROM quiz_attempts qa
-                JOIN subjects s ON qa.subject_id = s.id
-                WHERE qa.status = 'completed'
-                GROUP BY s.id, s.name
-            """
-        
-        df = pd.read_sql_query(query, conn)
-        conn.close()
-        
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='Report', index=False)
-        output.seek(0)
-        return output
+        try:
+            conn = sqlite3.connect(self.db_path)
+            
+            if report_type == 'individual':
+                query = """
+                    SELECT u.username, s.name, qa.mcq_score, qa.descriptive_score, qa.total_score, qa.attempted_at
+                    FROM quiz_attempts qa
+                    JOIN users u ON qa.student_id = u.id
+                    JOIN subjects s ON qa.subject_id = s.id
+                    WHERE qa.status = 'completed'
+                """
+                if filters and 'student_id' in filters:
+                    query += f" AND qa.student_id = {filters['student_id']}"
+            
+            elif report_type == 'subject':
+                query = """
+                    SELECT s.name, u.username, qa.mcq_score, qa.descriptive_score, qa.total_score, qa.attempted_at
+                    FROM quiz_attempts qa
+                    JOIN users u ON qa.student_id = u.id
+                    JOIN subjects s ON qa.subject_id = s.id
+                    WHERE qa.status = 'completed'
+                """
+                if filters and 'subject_id' in filters:
+                    query += f" AND qa.subject_id = {filters['subject_id']}"
+            
+            elif report_type == 'class':
+                query = """
+                    SELECT s.name, COUNT(qa.id) as attempts, AVG(qa.total_score) as avg_score, MIN(qa.total_score) as min_score, MAX(qa.total_score) as max_score
+                    FROM quiz_attempts qa
+                    JOIN subjects s ON qa.subject_id = s.id
+                    WHERE qa.status = 'completed'
+                    GROUP BY s.id, s.name
+                """
+            
+            df = pd.read_sql_query(query, conn)
+            conn.close()
+            
+            if df.empty:
+                # Create a dummy dataframe with headers
+                if report_type == 'individual':
+                    df = pd.DataFrame(columns=['Username', 'Subject', 'MCQ Score', 'Descriptive Score', 'Total Score', 'Attempted At'])
+                elif report_type == 'subject':
+                    df = pd.DataFrame(columns=['Subject', 'Username', 'MCQ Score', 'Descriptive Score', 'Total Score', 'Attempted At'])
+                elif report_type == 'class':
+                    df = pd.DataFrame(columns=['Subject', 'Attempts', 'Avg Score', 'Min Score', 'Max Score'])
+            
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                df.to_excel(writer, sheet_name='Report', index=False)
+            output.seek(0)
+            return output
+        except Exception as e:
+            raise Exception(f"Error generating report: {str(e)}")

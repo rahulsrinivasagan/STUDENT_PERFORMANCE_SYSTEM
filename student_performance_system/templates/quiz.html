@@ -3,52 +3,72 @@
 {% block title %}Quiz - Student Performance Analysis System{% endblock %}
 
 {% block content %}
-<div class="quiz-container">
-    <h2>Quiz</h2>
-    <form method="POST" id="quiz-form">
-        <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
-        {% if mcq_questions %}
-            <div class="mcq-section">
-                <h3>Multiple Choice Questions</h3>
-                {% for question in mcq_questions %}
-                    <div class="question">
-                        <p><strong>Q{{ loop.index }}:</strong> {{ question.question }}</p>
-                        <div class="options">
-                            {% for option_key, option_value in question.options.items() %}
-                                <label>
-                                    <input type="radio" name="{{ question.id }}" value="{{ option_key }}" required>
-                                    {{ option_key }}. {{ option_value }}
-                                </label>
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="card-title mb-1">Quiz</h2>
+                        <p class="text-muted mb-0">Complete the questions and submit your answers.</p>
+                    </div>
+                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary">Back</a>
+                </div>
+                <form method="POST" id="quiz-form">
+                    <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
+                    {% if mcq_questions %}
+                        <div class="mb-4">
+                            <h5 class="mb-3">Multiple Choice Questions</h5>
+                            {% for question in mcq_questions %}
+                                <div class="border rounded p-3 mb-3">
+                                    <p class="mb-2"><strong>Q{{ loop.index }}:</strong> {{ question.question }}</p>
+                                    <div class="row g-3">
+                                        {% for option_key, option_value in question.options.items() %}
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="{{ question.id }}" id="q{{ question.id }}_{{ option_key }}" value="{{ option_key }}" required>
+                                                    <label class="form-check-label" for="q{{ question.id }}_{{ option_key }}">{{ option_key }}. {{ option_value }}</label>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
                             {% endfor %}
                         </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-        
-        {% if descriptive_questions %}
-            <div class="descriptive-section">
-                <h3>Descriptive Questions</h3>
-                {% for question in descriptive_questions %}
-                    <div class="question">
-                        <p><strong>Q{{ loop.index + mcq_questions|length }}:</strong> {{ question.question }} ({{ question.marks }} marks)</p>
-                        <div class="upload-section">
-                            <input type="file" id="pdf_{{ question.id }}" name="pdf_{{ question.id }}" accept=".pdf" required>
-                            <button type="button" class="btn btn-small" onclick="uploadPDF({{ question.id }}, {{ attempt_id }})">Upload Answer</button>
-                            <div id="upload-status-{{ question.id }}"></div>
+                    {% endif %}
+                    {% if descriptive_questions %}
+                        <div class="mb-4">
+                            <h5 class="mb-3">Descriptive Questions</h5>
+                            {% for question in descriptive_questions %}
+                                <div class="border rounded p-3 mb-3">
+                                    <p class="mb-2"><strong>Q{{ loop.index + mcq_questions|length }}:</strong> {{ question.question }} <span class="badge bg-secondary">{{ question.marks }} marks</span></p>
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-8">
+                                            <input class="form-control" type="file" id="pdf_{{ question.id }}" name="pdf_{{ question.id }}" accept=".pdf">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button type="button" class="btn btn-outline-primary w-100" data-question-id="{{ question.id }}" data-attempt-id="{{ attempt_id }}" onclick="uploadPDF(this)">Upload Answer</button>
+                                        </div>
+                                        <div class="col-12">
+                                            <div id="upload-status-{{ question.id }}"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
-                    </div>
-                {% endfor %}
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary">Submit Quiz</button>
+                </form>
             </div>
-        {% endif %}
-        
-        <button type="submit" class="btn btn-primary" id="submit-quiz">Submit Quiz</button>
-    </form>
+        </div>
+    </div>
 </div>
 
 {% block scripts %}
 <script>
-function uploadPDF(questionId, attemptId) {
+function uploadPDF(button) {
+    const questionId = button.getAttribute('data-question-id');
+    const attemptId = button.getAttribute('data-attempt-id');
     const fileInput = document.getElementById(`pdf_${questionId}`);
     const statusDiv = document.getElementById(`upload-status-${questionId}`);
     

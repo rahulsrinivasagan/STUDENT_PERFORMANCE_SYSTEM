@@ -3,34 +3,53 @@
 {% block title %}View Submissions - Student Performance Analysis System{% endblock %}
 
 {% block content %}
-<div class="submissions-container">
-    <h2>Student Submissions - {{ subject.name }}</h2>
-    
-    {% if submissions %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Student</th>
-                    <th>MCQ Score</th>
-                    <th>Descriptive Score</th>
-                    <th>Total Score</th>
-                    <th>Attempted At</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for submission in submissions %}
-                    <tr>
-                        <td>{{ submission.student }}</td>
-                        <td>{{ submission.mcq_score }}</td>
-                        <td>{{ submission.descriptive_score }}</td>
-                        <td>{{ submission.total_score }}</td>
-                        <td>{{ submission.attempted_at }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No submissions yet for this subject.</p>
-    {% endif %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2>Student Submissions</h2>
+                <p class="text-muted">Subject: <strong>{{ subject.name }}</strong></p>
+            </div>
+            <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if submissions %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>MCQ Score</th>
+                            <th>Descriptive</th>
+                            <th>Total</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in submissions %}
+                            <tr>
+                                <td><strong>{{ submission.student }}</strong></td>
+                                <td><span class="badge bg-info">{{ submission.mcq_score }}</span></td>
+                                <td><span class="badge bg-secondary">{{ submission.descriptive_score }}</span></td>
+                                <td><span class="badge bg-primary">{{ submission.total_score }}</span></td>
+                                <td><small class="text-muted">{{ submission.attempted_at }}</small></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">Total submissions: <strong>{{ submissions|length }}</strong></small>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <p class="text-muted mb-0">📄 No submissions yet for this subject.</p>
+            </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

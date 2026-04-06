@@ -3,37 +3,109 @@
 {% block title %}Admin Dashboard - Student Performance Analysis System{% endblock %}
 
 {% block content %}
-<div class="dashboard">
-    <h2>Welcome, {{ user.username }}!</h2>
-    
-    <div class="dashboard-grid">
-        <div class="card">
-            <h3>System Statistics</h3>
-            <div class="stats">
-                <div class="stat-item">
-                    <span class="label">Total Students:</span>
-                    <span class="value">{{ stats.students }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="label">Total Teachers:</span>
-                    <span class="value">{{ stats.teachers }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="label">Total Quiz Attempts:</span>
-                    <span class="value">{{ stats.attempts }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="label">Average Score:</span>
-                    <span class="value">{{ stats.avg_score }}</span>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2>Admin Dashboard</h2>
+                <p class="text-muted">System overview and performance metrics.</p>
+            </div>
+            <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-primary">Manage Users</a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 bg-light">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small mb-1">Total Students</p>
+                        <h3 class="mb-0">{{ stats.students }}</h3>
+                    </div>
+                    <span class="badge bg-primary">👥</span>
                 </div>
             </div>
         </div>
-        
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 bg-light">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small mb-1">Total Teachers</p>
+                        <h3 class="mb-0">{{ stats.teachers }}</h3>
+                    </div>
+                    <span class="badge bg-success">👨‍🏫</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 bg-light">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small mb-1">Quiz Attempts</p>
+                        <h3 class="mb-0">{{ stats.attempts }}</h3>
+                    </div>
+                    <span class="badge bg-info">📝</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 bg-light">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small mb-1">Average Score</p>
+                        <h3 class="mb-0">{{ "%.1f"|format(stats.avg_score) }}</h3>
+                    </div>
+                    <span class="badge bg-warning">⭐</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
         <div class="card">
-            <h3>Reports</h3>
-            <a href="{{ url_for('admin.generate_report', report_type='individual') }}" class="btn btn-primary">Individual Reports</a>
-            <a href="{{ url_for('admin.generate_report', report_type='subject') }}" class="btn btn-primary">Subject Reports</a>
-            <a href="{{ url_for('admin.generate_report', report_type='class') }}" class="btn btn-primary">Class Reports</a>
+            <div class="card-body">
+                <h5 class="card-title mb-3">Generate Reports</h5>
+                <p class="text-muted small mb-3">Download comprehensive performance analysis reports.</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin.generate_report', report_type='individual') }}" class="btn btn-outline-primary">
+                        📊 Individual Reports
+                    </a>
+                    <a href="{{ url_for('admin.generate_report', report_type='subject') }}" class="btn btn-outline-primary">
+                        📈 Subject Reports
+                    </a>
+                    <a href="{{ url_for('admin.generate_report', report_type='class') }}" class="btn btn-outline-primary">
+                        📋 Class Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Quick Links</h5>
+                <p class="text-muted small mb-3">Access key admin functions.</p>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin.manage_users') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        Manage Users
+                        <span class="badge bg-secondary">→</span>
+                    </a>
+                    <a href="{{ url_for('admin.analytics') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        View Analytics
+                        <span class="badge bg-secondary">→</span>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
