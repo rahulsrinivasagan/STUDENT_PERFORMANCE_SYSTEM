@@ -91,6 +91,53 @@ class QuizTimer {
 }
 
 // Export functions for use in templates
+function getSavedTheme() {
+    if (window.localStorage) {
+        return localStorage.getItem('theme');
+    }
+    return null;
+}
+
+function applyTheme(theme) {
+    const body = document.body;
+    const toggle = document.getElementById('theme-toggle');
+    if (theme === 'dark') {
+        body.classList.add('theme-dark');
+        if (toggle) {
+            toggle.textContent = 'Light Mode';
+            toggle.classList.remove('btn-outline-light');
+            toggle.classList.add('btn-outline-secondary');
+        }
+    } else {
+        body.classList.remove('theme-dark');
+        if (toggle) {
+            toggle.textContent = 'Dark Mode';
+            toggle.classList.remove('btn-outline-secondary');
+            toggle.classList.add('btn-outline-light');
+        }
+    }
+}
+
+function toggleTheme() {
+    const current = document.body.classList.contains('theme-dark') ? 'dark' : 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    if (window.localStorage) {
+        localStorage.setItem('theme', next);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const themeToggle = document.getElementById('theme-toggle');
+    const savedTheme = getSavedTheme();
+    const defaultTheme = savedTheme || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    applyTheme(defaultTheme);
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+});
+
+// Export functions for use in templates
 window.QuizTimer = QuizTimer;
 window.confirmDelete = confirmDelete;
 window.validateFileUpload = validateFileUpload;

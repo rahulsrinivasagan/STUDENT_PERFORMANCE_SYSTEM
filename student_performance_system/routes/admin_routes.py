@@ -50,13 +50,40 @@ def manage_users():
     """Manage students and teachers"""
     students = user_model.get_all_users_by_role('student')
     teachers = user_model.get_all_users_by_role('teacher')
-    return render_template('manage_users.html', students=students, teachers=teachers)
+    deleted_students = user_model.get_deleted_users_by_role('student')
+    deleted_teachers = user_model.get_deleted_users_by_role('teacher')
+    return render_template('manage_users.html', students=students, teachers=teachers, deleted_students=deleted_students, deleted_teachers=deleted_teachers)
+
+@admin_bp.route('/add_user', methods=['GET', 'POST'])
+def add_user():
+    """Add new student or teacher"""
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        role = request.form['role']
+        email = request.form.get('email')
+        
+        user_id = user_model.create_user(username, password, role, email)
+        if user_id:
+            flash(f'{role.capitalize()} {username} added successfully!', 'success')
+        else:
+            flash('Username already exists', 'error')
+        return redirect(url_for('admin.manage_users'))
+    
+    return render_template('add_user.html')
 
 @admin_bp.route('/delete_user/<int:user_id>')
 def delete_user(user_id):
-    """Delete a user"""
-    user_model.delete_user(user_id)
+    """Soft delete a user (mark as deleted)"""
+    user_model.soft_delete_user(user_id)
     flash('User deleted successfully!', 'success')
+    return redirect(url_for('admin.manage_users'))
+
+@admin_bp.route('/restore_user/<int:user_id>')
+def restore_user(user_id):
+    """Restore a deleted user"""
+    user_model.restore_user(user_id)
+    flash('User restored successfully!', 'success')
     return redirect(url_for('admin.manage_users'))
 
 @admin_bp.route('/analytics')
@@ -65,11 +92,28 @@ def analytics():
     data = quiz_model.get_analytics_data(session['user_id'], 'admin')
     return render_template('analytics.html', data=data, role='admin')
 
-@admin_bp.route('/generate_report/<report_type>')
-def generate_report(report_type):
+@admin_bp.route('/view_reports/<report_type>')
+def view_reports(report_type):
+    """View report preview"""
+    valid_types = ['individual', 'subject', 'class']
+    if report_type not in valid_types:
+        flash('Invalid report type', 'error')
+        return redirect(url_for('admin.dashboard'))
+
+    if report_type == 'individual':
+        preview_data = quiz_model.get_individual_report_preview()
+    elif report_type == 'subject':
+        preview_data = quiz_model.get_subject_report_preview()
+    else:
+        preview_data = quiz_model.get_class_report_preview()
+
+    preview_data = preview_data or []
+    return render_template('admin_reports.html', report_type=report_type, preview_data=preview_data)
+
+@admin_bp.route('/download_report/<report_type>')
+def download_report(report_type):
     """Generate and download report"""
     if report_type == 'individual':
-        # For simplicity, generate report for all students
         output = quiz_model.generate_report('individual')
     elif report_type == 'subject':
         output = quiz_model.generate_report('subject')

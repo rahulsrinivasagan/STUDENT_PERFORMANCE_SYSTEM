@@ -16,6 +16,8 @@ from io import BytesIO
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Change this in production
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.jinja_env.auto_reload = True
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
@@ -41,6 +43,7 @@ def init_db():
         password TEXT NOT NULL,
         role TEXT NOT NULL,
         email TEXT,
+        is_deleted INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
     
@@ -129,6 +132,13 @@ def init_db():
         FOREIGN KEY (attempt_id) REFERENCES quiz_attempts(id),
         FOREIGN KEY (question_id) REFERENCES descriptive_questions(id)
     )''')
+    
+    # Migration: Add is_deleted column if it doesn't exist
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN is_deleted INTEGER DEFAULT 0")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" not in str(e):
+            raise
     
     conn.commit()
     conn.close()
@@ -257,4 +267,4 @@ def logout():
 if __name__ == '__main__':
     init_db()
     init_sample_data()
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5000, debug=True)

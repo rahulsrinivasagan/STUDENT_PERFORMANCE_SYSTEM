@@ -8,6 +8,11 @@
         <div class="card shadow-sm">
             <div class="card-body p-5">
                 <h2 class="card-title mb-4 text-center">Create Account</h2>
+                
+                <div class="alert alert-info" role="alert">
+                    <strong>📚 For Students:</strong> Please contact your teacher or administrator to create an account.
+                </div>
+                
                 <form method="POST">
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
@@ -28,9 +33,9 @@
                         <label for="role" class="form-label">Role</label>
                         <select id="role" name="role" class="form-select" required>
                             <option value="">Select your role...</option>
-                            <option value="student">Student</option>
-                            <option value="teacher">Teacher</option>
+                            <option value="teacher" selected>Teacher</option>
                         </select>
+                        <small class="text-muted">Only teachers can self-register.</small>
                     </div>
                     
                     <button type="submit" class="btn btn-primary w-100">Register</button>

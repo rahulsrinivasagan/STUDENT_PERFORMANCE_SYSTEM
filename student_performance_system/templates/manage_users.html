@@ -8,13 +8,19 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h2>Manage Users</h2>
-                <p class="text-muted">View and manage registered students and teachers.</p>
+                <p class="text-muted">View, manage, and restore registered students and teachers.</p>
             </div>
-            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('admin.add_user') }}" class="btn btn-success btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Add User
+                </a>
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Active Users Section -->
 <div class="row g-4">
     <div class="col-lg-6">
         <div class="card">
@@ -38,7 +44,9 @@
                                         <td><strong>{{ student.username }}</strong></td>
                                         <td>{{ student.email or '—' }}</td>
                                         <td>
-                                            <a href="{{ url_for('admin.delete_user', user_id=student.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete {{ student.username }}?')">Delete</a>
+                                            <a href="{{ url_for('admin.delete_user', user_id=student.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete {{ student.username }}? You can restore them later.')">
+                                                <i class="fas fa-trash me-1"></i>Delete
+                                            </a>
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -46,7 +54,7 @@
                         </table>
                     </div>
                 {% else %}
-                    <p class="text-muted text-center py-3">No students registered yet.</p>
+                    <p class="text-muted text-center py-3">No active students. <a href="{{ url_for('admin.add_user') }}">Add one now</a></p>
                 {% endif %}
             </div>
         </div>
@@ -74,7 +82,9 @@
                                         <td><strong>{{ teacher.username }}</strong></td>
                                         <td>{{ teacher.email or '—' }}</td>
                                         <td>
-                                            <a href="{{ url_for('admin.delete_user', user_id=teacher.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete {{ teacher.username }}?')">Delete</a>
+                                            <a href="{{ url_for('admin.delete_user', user_id=teacher.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete {{ teacher.username }}? You can restore them later.')">
+                                                <i class="fas fa-trash me-1"></i>Delete
+                                            </a>
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -82,10 +92,92 @@
                         </table>
                     </div>
                 {% else %}
-                    <p class="text-muted text-center py-3">No teachers registered yet.</p>
+                    <p class="text-muted text-center py-3">No active teachers. <a href="{{ url_for('admin.add_user') }}">Add one now</a></p>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<!-- Deleted Users Section -->
+<div class="row g-4 mt-3">
+    {% if deleted_students or deleted_teachers %}
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning bg-opacity-10">
+                <h5 class="card-title mb-0">🗑️ Deleted Users (Restore Options Available)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    {% if deleted_students %}
+                    <div class="col-lg-6">
+                        <h6 class="mb-3">Deleted Students</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in deleted_students %}
+                                        <tr class="table-light">
+                                            <td><strike>{{ student.username }}</strike></td>
+                                            <td>{{ student.email or '—' }}</td>
+                                            <td>
+                                                <a href="{{ url_for('admin.restore_user', user_id=student.id) }}" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-undo me-1"></i>Restore
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if deleted_teachers %}
+                    <div class="col-lg-6">
+                        <h6 class="mb-3">Deleted Teachers</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for teacher in deleted_teachers %}
+                                        <tr class="table-light">
+                                            <td><strike>{{ teacher.username }}</strike></td>
+                                            <td>{{ teacher.email or '—' }}</td>
+                                            <td>
+                                                <a href="{{ url_for('admin.restore_user', user_id=teacher.id) }}" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-undo me-1"></i>Restore
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.table-light {
+    opacity: 0.7;
+}
+</style>
 {% endblock %}

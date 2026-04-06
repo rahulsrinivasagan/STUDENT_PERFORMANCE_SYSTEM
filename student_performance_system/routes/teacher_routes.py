@@ -90,7 +90,7 @@ def analytics():
     return render_template('analytics.html', data=data, role='teacher')
 
 @teacher_bp.route('/reports/<report_type>')
-def view_reports(report_type):
+def view_class_reports(report_type):
     """View reports with charts"""
     if report_type == 'subject':
         # Get subject-wise performance data

@@ -75,15 +75,15 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title mb-3">Generate Reports</h5>
-                <p class="text-muted small mb-3">Download comprehensive performance analysis reports.</p>
+                <p class="text-muted small mb-3">View and download comprehensive performance analysis reports.</p>
                 <div class="d-grid gap-2">
-                    <a href="{{ url_for('admin.generate_report', report_type='individual') }}" class="btn btn-outline-primary">
+                    <a href="{{ url_for('admin.view_reports', report_type='individual') }}" class="btn btn-outline-primary">
                         📊 Individual Reports
                     </a>
-                    <a href="{{ url_for('admin.generate_report', report_type='subject') }}" class="btn btn-outline-primary">
+                    <a href="{{ url_for('admin.view_reports', report_type='subject') }}" class="btn btn-outline-primary">
                         📈 Subject Reports
                     </a>
-                    <a href="{{ url_for('admin.generate_report', report_type='class') }}" class="btn btn-outline-primary">
+                    <a href="{{ url_for('admin.view_reports', report_type='class') }}" class="btn btn-outline-primary">
                         📋 Class Reports
                     </a>
                 </div>

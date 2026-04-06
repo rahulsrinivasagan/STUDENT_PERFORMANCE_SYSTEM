@@ -22,10 +22,10 @@ class UserModel:
             return None
     
     def authenticate_user(self, username, password):
-        """Authenticate user and return user data if valid"""
+        """Authenticate user and return user data if valid (non-deleted users only)"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT id, password, role FROM users WHERE username = ?", (username,))
+        cursor.execute("SELECT id, password, role FROM users WHERE username = ? AND (is_deleted IS NULL OR is_deleted = 0)", (username,))
         user = cursor.fetchone()
         conn.close()
         if user and check_password_hash(user[1], password):
@@ -33,10 +33,10 @@ class UserModel:
         return None
     
     def get_user_by_id(self, user_id):
-        """Get user details by ID"""
+        """Get non-deleted user details by ID"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT id, username, role, email FROM users WHERE id = ?", (user_id,))
+        cursor.execute("SELECT id, username, role, email FROM users WHERE id = ? AND (is_deleted IS NULL OR is_deleted = 0)", (user_id,))
         user = cursor.fetchone()
         conn.close()
         if user:
@@ -44,18 +44,43 @@ class UserModel:
         return None
     
     def get_all_users_by_role(self, role):
-        """Get all users by role"""
+        """Get all non-deleted users by role"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT id, username, email FROM users WHERE role = ?", (role,))
+        cursor.execute("SELECT id, username, email FROM users WHERE role = ? AND (is_deleted IS NULL OR is_deleted = 0)", (role,))
         users = cursor.fetchall()
         conn.close()
         return [{'id': u[0], 'username': u[1], 'email': u[2]} for u in users]
     
     def delete_user(self, user_id):
-        """Delete a user by ID"""
+        """Delete a user by ID (hard delete - legacy)"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
         conn.commit()
         conn.close()
+    
+    def soft_delete_user(self, user_id):
+        """Soft delete a user (mark as deleted)"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET is_deleted = 1 WHERE id = ?", (user_id,))
+        conn.commit()
+        conn.close()
+    
+    def restore_user(self, user_id):
+        """Restore a soft deleted user"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET is_deleted = 0 WHERE id = ?", (user_id,))
+        conn.commit()
+        conn.close()
+    
+    def get_deleted_users_by_role(self, role):
+        """Get all soft deleted users by role"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, username, email FROM users WHERE role = ? AND is_deleted = 1", (role,))
+        users = cursor.fetchall()
+        conn.close()
+        return [{'id': u[0], 'username': u[1], 'email': u[2]} for u in users]

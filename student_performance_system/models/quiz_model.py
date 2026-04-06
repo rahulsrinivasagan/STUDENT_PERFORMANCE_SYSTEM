@@ -215,6 +215,85 @@ class QuizModel:
         conn.close()
         return [{'subject': d[0], 'attempts': d[1], 'avg_score': d[2], 'min_score': d[3], 'max_score': d[4]} for d in data]
     
+    def get_individual_report_preview(self, limit=10):
+        """Get preview rows for individual report"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT u.username, s.name, qa.mcq_score, qa.descriptive_score, qa.total_score, qa.attempted_at
+            FROM quiz_attempts qa
+            JOIN users u ON qa.student_id = u.id
+            JOIN subjects s ON qa.subject_id = s.id
+            WHERE qa.status = 'completed'
+            ORDER BY qa.attempted_at DESC
+            LIMIT ?
+        """, (limit,))
+        data = cursor.fetchall()
+        conn.close()
+        return [
+            {
+                'username': d[0],
+                'subject': d[1],
+                'mcq_score': d[2],
+                'descriptive_score': d[3],
+                'total_score': d[4],
+                'attempted_at': d[5],
+            }
+            for d in data
+        ]
+    
+    def get_subject_report_preview(self, limit=10):
+        """Get preview rows for subject report"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT s.name, u.username, qa.mcq_score, qa.descriptive_score, qa.total_score, qa.attempted_at
+            FROM quiz_attempts qa
+            JOIN users u ON qa.student_id = u.id
+            JOIN subjects s ON qa.subject_id = s.id
+            WHERE qa.status = 'completed'
+            ORDER BY qa.attempted_at DESC
+            LIMIT ?
+        """, (limit,))
+        data = cursor.fetchall()
+        conn.close()
+        return [
+            {
+                'subject': d[0],
+                'student': d[1],
+                'mcq_score': d[2],
+                'descriptive_score': d[3],
+                'total_score': d[4],
+                'attempted_at': d[5],
+            }
+            for d in data
+        ]
+    
+    def get_class_report_preview(self):
+        """Get preview rows for class report"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT s.name, COUNT(qa.id) as attempts, AVG(qa.total_score) as avg_score, MIN(qa.total_score) as min_score, MAX(qa.total_score) as max_score
+            FROM quiz_attempts qa
+            JOIN subjects s ON qa.subject_id = s.id
+            WHERE qa.status = 'completed'
+            GROUP BY s.id, s.name
+            ORDER BY s.name ASC
+        """)
+        data = cursor.fetchall()
+        conn.close()
+        return [
+            {
+                'subject': d[0],
+                'attempts': d[1],
+                'avg_score': d[2],
+                'min_score': d[3],
+                'max_score': d[4],
+            }
+            for d in data
+        ]
+    
     def get_class_performance_data(self):
         """Get data for class performance summary"""
         conn = sqlite3.connect(self.db_path)

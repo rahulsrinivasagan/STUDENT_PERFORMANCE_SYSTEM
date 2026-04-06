@@ -24,12 +24,17 @@ def login():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    """Handle user registration"""
+    """Handle user registration - teachers only"""
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        role = request.form['role']
+        role = request.form.get('role')
         email = request.form.get('email')
+        
+        # Prevent student self-registration
+        if role == 'student':
+            flash('Students cannot self-register. Please contact your teacher or administrator.', 'warning')
+            return redirect(url_for('auth.register'))
         
         user_id = user_model.create_user(username, password, role, email)
         if user_id:

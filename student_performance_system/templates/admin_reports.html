@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Student Performance Analysis System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2>📋 {% if report_type == 'individual' %}Individual Reports{% elif report_type == 'subject' %}Subject Reports{% else %}Class Reports{% endif %}</h2>
+                <p class="text-muted">View and download performance analysis reports.</p>
+            </div>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Report Preview</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Report Information:</strong>
+                    <br>
+                    {% if report_type == 'individual' %}
+                    This report contains individual student performance analysis including scores, attempts, and detailed metrics for each student.
+                    {% elif report_type == 'subject' %}
+                    This report shows subject-wise performance breakdown including average scores, total attempts, and performance trends by subject.
+                    {% else %}
+                    This report provides a comprehensive class-wide performance summary including overall statistics and comparative analysis.
+                    {% endif %}
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title mb-3">Report Type</h6>
+                                <p class="mb-0">
+                                    <span class="badge bg-primary">
+                                        {% if report_type == 'individual' %}Individual Student Reports{% elif report_type == 'subject' %}Subject Performance Analysis{% else %}Class Summary Report{% endif %}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title mb-3">Preview Rows</h6>
+                                <p class="mb-0">
+                                    <span class="badge bg-info">{{ preview_data|length }} rows</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title mb-3">Format</h6>
+                                <p class="mb-0">
+                                    <span class="badge bg-success">Excel (.xlsx)</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                {% if report_type == 'individual' %}
+                                <th>Student</th>
+                                <th>Subject</th>
+                                <th>MCQ Score</th>
+                                <th>Descriptive Score</th>
+                                <th>Total Score</th>
+                                <th>Attempted At</th>
+                                {% elif report_type == 'subject' %}
+                                <th>Subject</th>
+                                <th>Student</th>
+                                <th>MCQ Score</th>
+                                <th>Descriptive Score</th>
+                                <th>Total Score</th>
+                                <th>Attempted At</th>
+                                {% else %}
+                                <th>Subject</th>
+                                <th>Attempts</th>
+                                <th>Average Score</th>
+                                <th>Min Score</th>
+                                <th>Max Score</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if preview_data and preview_data | length > 0 %}
+                                {% for row in preview_data %}
+                                    <tr>
+                                        {% if report_type == 'individual' %}
+                                        <td>{{ row.username }}</td>
+                                        <td>{{ row.subject }}</td>
+                                        <td>{{ row.mcq_score }}</td>
+                                        <td>{{ row.descriptive_score }}</td>
+                                        <td>{{ row.total_score }}</td>
+                                        <td>{{ row.attempted_at }}</td>
+                                        {% elif report_type == 'subject' %}
+                                        <td>{{ row.subject }}</td>
+                                        <td>{{ row.student }}</td>
+                                        <td>{{ row.mcq_score }}</td>
+                                        <td>{{ row.descriptive_score }}</td>
+                                        <td>{{ row.total_score }}</td>
+                                        <td>{{ row.attempted_at }}</td>
+                                        {% else %}
+                                        <td>{{ row.subject }}</td>
+                                        <td>{{ row.attempts }}</td>
+                                        <td>{{ row.avg_score|round(2) }}</td>
+                                        <td>{{ row.min_score }}</td>
+                                        <td>{{ row.max_score }}</td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">No preview data available yet.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('admin.download_report', report_type=report_type) }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-download me-2"></i>Download Report
+                    </a>
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="row g-3 mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-book me-2 text-info"></i>What's Included
+                        </h6>
+                        <ul class="small mb-0 ps-3">
+                            {% if report_type == 'individual' %}
+                            <li>Student-wise score breakdown</li>
+                            <li>Subject performance for each student</li>
+                            <li>Attempt history and trends</li>
+                            <li>Overall performance metrics</li>
+                            {% elif report_type == 'subject' %}
+                            <li>Subject-wise performance analysis</li>
+                            <li>Average scores per subject</li>
+                            <li>Total attempts by subject</li>
+                            <li>Performance trends</li>
+                            {% else %}
+                            <li>Class-wide statistics</li>
+                            <li>Overall average performance</li>
+                            <li>Total class attempts</li>
+                            <li>Performance distribution</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-question-circle me-2 text-warning"></i>Need Help?
+                        </h6>
+                        <ul class="small mb-0 ps-3">
+                            <li>Reports are generated from latest quiz data</li>
+                            <li>Ensure all quizzes are marked as completed</li>
+                            <li>Download files are in Excel format</li>
+                            <li>Reports are read-only for security</li>
+                            <li>Contact admin for custom reports</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

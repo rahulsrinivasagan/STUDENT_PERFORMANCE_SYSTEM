@@ -26,8 +26,8 @@
     {% if data %}
     <div class="row g-4">
         <!-- Charts Section -->
-        <div class="col-12" id="chartsContainer">
-            <!-- Charts will be inserted here by JavaScript -->
+        <div class="col-12">
+            <div id="chartsContainer"></div>
         </div>
 
         <!-- Summary Cards -->
@@ -55,12 +55,12 @@
                                         </div>
                                         <div class="col-6">
                                             <h4 class="text-warning">{{ "%.1f"|format(item.avg_score) }}%</h4>
-                                            <small class="text-muted">Avg Score</small>
+                                            <small class="text-muted">Class Avg</small>
                                         </div>
                                     {% else %}
                                         <div class="col-6">
                                             <h4 class="text-primary">{{ item.total_attempts }}</h4>
-                                            <small class="text-muted">Attempts</small>
+                                            <small class="text-muted">Total Attempts</small>
                                         </div>
                                         <div class="col-6">
                                             <h4 class="text-success">{{ "%.1f"|format(item.avg_score) }}%</h4>
@@ -95,8 +95,20 @@
     border-radius: 15px;
 }
 
-.chart-container {
-    margin-bottom: 2rem;
+.chart-controls {
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.chart-controls .btn {
+    min-width: 110px;
+}
+
+.btn.active {
+    background-color: #0d6efd !important;
+    color: white !important;
 }
 </style>
 {% endblock %}
@@ -104,253 +116,147 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const canvas = document.getElementById('mainChart');
-    const dataStr = canvas ? canvas.getAttribute('data-chart-data') : null;
-    const role = canvas ? canvas.getAttribute('data-role') : null;
-    const data_items = dataStr ? JSON.parse(dataStr) : [];
+    const analyticsData = {{ data|tojson }};
+    const role = "{{ role }}";
     const container = document.getElementById('chartsContainer');
-    
-    if (!container || !data_items.length) return;
-    
+
+    if (!container || !Array.isArray(analyticsData) || analyticsData.length === 0) {
+        return;
+    }
+
+    const labels = analyticsData.map(d => d.subject);
+    const avgScores = analyticsData.map(d => Number(d.avg_score || 0));
+    const studentCounts = analyticsData.map(d => Number(d.students || 0));
+    const attemptsCounts = analyticsData.map(d => Number(d.total_attempts || 0));
+
+    const renderControls = () => {
+        if (role === 'student') {
+            return `<div class="chart-controls"><button id="barViewBtn" class="btn btn-outline-primary btn-sm active">Bar Chart</button><button id="lineViewBtn" class="btn btn-outline-secondary btn-sm">Line Chart</button></div>`;
+        }
+        if (role === 'teacher') {
+            return `<div class="chart-controls"><button id="pieViewBtn" class="btn btn-outline-primary btn-sm active">Pie View</button><button id="barViewBtn" class="btn btn-outline-secondary btn-sm">Bar View</button></div>`;
+        }
+        if (role === 'admin') {
+            return `<div class="chart-controls"><button id="pieViewBtn" class="btn btn-outline-primary btn-sm active">Pie Chart</button><button id="barViewBtn" class="btn btn-outline-secondary btn-sm">Bar Chart</button></div>`;
+        }
+        return '';
+    };
+
     let chartHTML = '';
-    
+    const controlHTML = renderControls();
+
     if (role === 'student') {
-        chartHTML = `
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h4 class="card-title mb-0">📈 My Performance Across Subjects</h4>
-                </div>
-                <div class="card-body">
-                    <canvas id="mainChart" style="max-height: 400px;"></canvas>
-                </div>
-            </div>
-        `;
+        chartHTML = `<div class="card shadow-sm mb-4"><div class="card-header bg-light"><h5 class="card-title mb-0">📈 My Performance Across Subjects</h5></div><div class="card-body"><canvas id="mainChart" style="max-height: 400px;"></canvas></div></div>`;
     } else if (role === 'teacher') {
-        chartHTML = `
-            <div class="row g-4">
-                <div class="col-lg-6">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-light">
-                            <h5 class="card-title mb-0">📊 Average Scores by Subject</h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="barChart" style="max-height: 300px;"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-light">
-                            <h5 class="card-title mb-0">🥧 Student Distribution</h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="pieChart" style="max-height: 300px;"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        chartHTML = `<div class="row g-4"><div class="col-lg-6"><div class="card shadow-sm"><div class="card-header bg-light"><h5 class="card-title mb-0">📊 Average Scores by Subject</h5></div><div class="card-body"><canvas id="barChart" style="max-height: 300px;"></canvas></div></div></div><div class="col-lg-6"><div class="card shadow-sm"><div class="card-header bg-light"><h5 class="card-title mb-0">📊 Student Distribution</h5></div><div class="card-body"><canvas id="pieChart" style="max-height: 300px;"></canvas></div></div></div></div>`;
     } else if (role === 'admin') {
-        chartHTML = `
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h4 class="card-title mb-0">📊 System-wide Quiz Attempts</h4>
-                </div>
-                <div class="card-body">
-                    <canvas id="mainChart" style="max-height: 400px;"></canvas>
-                </div>
-            </div>
-        `;
+        chartHTML = `<div class="card shadow-sm mb-4"><div class="card-header bg-light"><h5 class="card-title mb-0">📊 System-wide Attempts</h5></div><div class="card-body"><canvas id="mainChart" style="max-height: 400px;"></canvas></div></div>`;
     }
-    
-    container.innerHTML = chartHTML;
-    
-    // Create charts
+
+    container.innerHTML = controlHTML + chartHTML;
+
+    const createChart = (canvasId, chartType, chartLabels, values, labelText) => {
+        const ctx = document.getElementById(canvasId)?.getContext('2d');
+        if (!ctx) return null;
+        return new Chart(ctx, {
+            type: chartType,
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: labelText,
+                    data: values,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, max: 100 } }
+            }
+        });
+    };
+
+    const createPieOrBar = (canvasId, chartType, chartLabels, values) => {
+        const ctx = document.getElementById(canvasId)?.getContext('2d');
+        if (!ctx) return null;
+        return new Chart(ctx, {
+            type: chartType,
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: chartType === 'pie' ? 'Distribution' : 'Count',
+                    data: values,
+                    backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)', 'rgba(255, 205, 86, 0.5)', 'rgba(75, 192, 192, 0.5)', 'rgba(153, 102, 255, 0.5)'],
+                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 205, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: chartType === 'bar' ? { y: { beginAtZero: true } } : undefined
+            }
+        });
+    };
+
+    let mainChart = null, distributionChart = null;
+
     if (role === 'student') {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: data_items.map(d => d.subject),
-                datasets: [{
-                    label: 'Average Score',
-                    data: data_items.map(d => d.avg_score),
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: { beginAtZero: true, max: 100 }
-                }
-            }
-        });
-    } else if (role === 'teacher') {
-        // Bar chart for average scores
-        const barCtx = document.getElementById('barChart').getContext('2d');
-        new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: data_items.map(d => d.subject),
-                datasets: [{
-                    label: 'Average Score',
-                    data: data_items.map(d => d.avg_score),
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: { beginAtZero: true, max: 100 }
-                }
-            }
-        });
-        
-        // Pie chart for student distribution
-        const pieCtx = document.getElementById('pieChart').getContext('2d');
-        new Chart(pieCtx, {
-            type: 'pie',
-            data: {
-                labels: data_items.map(d => d.subject),
-                datasets: [{
-                    label: 'Students',
-                    data: data_items.map(d => d.students),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.5)',
-                        'rgba(54, 162, 235, 0.5)',
-                        'rgba(255, 205, 86, 0.5)',
-                        'rgba(75, 192, 192, 0.5)',
-                        'rgba(153, 102, 255, 0.5)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 205, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            }
-        });
-    } else if (role === 'admin') {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: data_items.map(d => d.subject),
-                datasets: [{
-                    label: 'Total Attempts',
-                    data: data_items.map(d => d.total_attempts),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.5)',
-                        'rgba(54, 162, 235, 0.5)',
-                        'rgba(255, 205, 86, 0.5)',
-                        'rgba(75, 192, 192, 0.5)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 205, 86, 1)',
-                        'rgba(75, 192, 192, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            }
-        });
+        mainChart = createChart('mainChart', 'bar', labels, avgScores, 'Average Score');
+        const barBtn = document.getElementById('barViewBtn');
+        const lineBtn = document.getElementById('lineViewBtn');
+        if (barBtn) barBtn.onclick = () => {
+            mainChart?.destroy();
+            mainChart = createChart('mainChart', 'bar', labels, avgScores, 'Average Score');
+            barBtn.classList.add('active');
+            lineBtn?.classList.remove('active');
+        };
+        if (lineBtn) lineBtn.onclick = () => {
+            mainChart?.destroy();
+            mainChart = createChart('mainChart', 'line', labels, avgScores, 'Average Score');
+            lineBtn.classList.add('active');
+            barBtn?.classList.remove('active');
+        };
     }
-});
-</script>
-        // Create multiple charts for teacher
-        const container = document.querySelector('.chart-container');
-        container.innerHTML = `
-            <div class="row">
-                <div class="col-md-6">
-                    <h5 class="text-center mb-3">Average Scores by Subject</h5>
-                    <canvas id="barChart" style="max-height: 300px;"></canvas>
-                </div>
-                <div class="col-md-6">
-                    <h5 class="text-center mb-3">Student Distribution</h5>
-                    <canvas id="pieChart" style="max-height: 300px;"></canvas>
-                </div>
-            </div>
-        `;
-        
-        // Bar chart for average scores
-        const barCtx = document.getElementById('barChart').getContext('2d');
-        new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: data_items.map(d => d.subject),
-                datasets: [{
-                    label: 'Average Score',
-                    data: data_items.map(d => d.avg_score),
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: { beginAtZero: true, max: 100 }
-                }
-            }
-        });
-        
-        // Pie chart for student distribution
-        const pieCtx = document.getElementById('pieChart').getContext('2d');
-        new Chart(pieCtx, {
-            type: 'pie',
-            data: {
-                labels: data_items.map(d => d.subject),
-                datasets: [{
-                    label: 'Students',
-                    data: data_items.map(d => d.students),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.5)',
-                        'rgba(54, 162, 235, 0.5)',
-                        'rgba(255, 205, 86, 0.5)',
-                        'rgba(75, 192, 192, 0.5)',
-                        'rgba(153, 102, 255, 0.5)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 205, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            }
-        });
-    } else if (role === 'admin') {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: data_items.map(d => d.subject),
-                datasets: [{
-                    label: 'Total Attempts',
-                    data: data_items.map(d => d.total_attempts),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.5)',
-                        'rgba(54, 162, 235, 0.5)',
-                        'rgba(255, 205, 86, 0.5)',
-                        'rgba(75, 192, 192, 0.5)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 205, 86, 1)',
-                        'rgba(75, 192, 192, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            }
-        });
+
+    if (role === 'teacher') {
+        createChart('barChart', 'bar', labels, avgScores, 'Average Score');
+        distributionChart = createPieOrBar('pieChart', 'pie', labels, studentCounts);
+        const pieBtn = document.getElementById('pieViewBtn');
+        const barBtn = document.getElementById('barViewBtn');
+        if (pieBtn) pieBtn.onclick = () => {
+            distributionChart?.destroy();
+            distributionChart = createPieOrBar('pieChart', 'pie', labels, studentCounts);
+            pieBtn.classList.add('active');
+            barBtn?.classList.remove('active');
+        };
+        if (barBtn) barBtn.onclick = () => {
+            distributionChart?.destroy();
+            distributionChart = createPieOrBar('pieChart', 'bar', labels, studentCounts);
+            barBtn.classList.add('active');
+            pieBtn?.classList.remove('active');
+        };
+    }
+
+    if (role === 'admin') {
+        mainChart = createPieOrBar('mainChart', 'pie', labels, attemptsCounts);
+        const pieBtn = document.getElementById('pieViewBtn');
+        const barBtn = document.getElementById('barViewBtn');
+        if (pieBtn) pieBtn.onclick = () => {
+            mainChart?.destroy();
+            mainChart = createPieOrBar('mainChart', 'pie', labels, attemptsCounts);
+            pieBtn.classList.add('active');
+            barBtn?.classList.remove('active');
+        };
+        if (barBtn) barBtn.onclick = () => {
+            mainChart?.destroy();
+            mainChart = createPieOrBar('mainChart', 'bar', labels, attemptsCounts);
+            barBtn.classList.add('active');
+            pieBtn?.classList.remove('active');
+        };
     }
 });
 </script>

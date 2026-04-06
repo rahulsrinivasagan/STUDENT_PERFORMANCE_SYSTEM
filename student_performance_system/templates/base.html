@@ -36,6 +36,9 @@
                         {% else %}
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Login</a></li>
                         {% endif %}
+                        <li class="nav-item d-flex align-items-center ms-2">
+                            <button id="theme-toggle" class="btn btn-outline-light btn-sm" type="button">Dark Mode</button>
+                        </li>
                     </ul>
                 </div>
             </div>
