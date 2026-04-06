@@ -173,15 +173,14 @@ class QuizModel:
             return [{'subject': d[0], 'avg_score': d[1], 'attempts': d[2]} for d in data]
         
         elif role == 'teacher':
-            # Teacher analytics - students performance in their subjects
+            # Teacher analytics - students performance in all subjects
             cursor.execute("""
                 SELECT s.name, COUNT(DISTINCT qa.student_id) as students, AVG(qa.total_score) as avg_score
                 FROM quiz_attempts qa
                 JOIN subjects s ON qa.subject_id = s.id
-                JOIN mcq_questions mq ON mq.subject_id = s.id
-                WHERE mq.created_by = ? AND qa.status = 'completed'
+                WHERE qa.status = 'completed'
                 GROUP BY s.id, s.name
-            """, (user_id,))
+            """)
             data = cursor.fetchall()
             return [{'subject': d[0], 'students': d[1], 'avg_score': d[2]} for d in data]
         
@@ -199,6 +198,38 @@ class QuizModel:
         
         conn.close()
         return []
+    
+    def get_subject_performance_data(self):
+        """Get data for subject-wise performance charts"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT s.name, COUNT(qa.id) as attempts, AVG(qa.total_score) as avg_score, 
+                   MIN(qa.total_score) as min_score, MAX(qa.total_score) as max_score
+            FROM quiz_attempts qa
+            JOIN subjects s ON qa.subject_id = s.id
+            WHERE qa.status = 'completed'
+            GROUP BY s.id, s.name
+        """)
+        data = cursor.fetchall()
+        conn.close()
+        return [{'subject': d[0], 'attempts': d[1], 'avg_score': d[2], 'min_score': d[3], 'max_score': d[4]} for d in data]
+    
+    def get_class_performance_data(self):
+        """Get data for class performance summary"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT u.username, COUNT(qa.id) as attempts, AVG(qa.total_score) as avg_score,
+                   SUM(qa.mcq_score) as total_mcq, SUM(qa.descriptive_score) as total_descriptive
+            FROM quiz_attempts qa
+            JOIN users u ON qa.student_id = u.id
+            WHERE qa.status = 'completed' AND u.role = 'student'
+            GROUP BY u.id, u.username
+        """)
+        data = cursor.fetchall()
+        conn.close()
+        return [{'student': d[0], 'attempts': d[1], 'avg_score': d[2], 'total_mcq': d[3], 'total_descriptive': d[4]} for d in data]
     
     def generate_report(self, report_type, filters=None):
         """Generate Excel report"""

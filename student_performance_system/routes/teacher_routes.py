@@ -89,16 +89,17 @@ def analytics():
     data = quiz_model.get_analytics_data(session['user_id'], 'teacher')
     return render_template('analytics.html', data=data, role='teacher')
 
-@teacher_bp.route('/generate_report/<report_type>')
-def generate_report(report_type):
-    """Generate and download report"""
+@teacher_bp.route('/reports/<report_type>')
+def view_reports(report_type):
+    """View reports with charts"""
     if report_type == 'subject':
-        # For simplicity, generate report for all subjects
-        output = quiz_model.generate_report('subject')
+        # Get subject-wise performance data
+        data = quiz_model.get_subject_performance_data()
     elif report_type == 'class':
-        output = quiz_model.generate_report('class')
+        # Get class performance summary
+        data = quiz_model.get_class_performance_data()
     else:
         flash('Invalid report type', 'error')
         return redirect(url_for('teacher.dashboard'))
     
-    return send_file(output, download_name=f'{report_type}_report.xlsx', as_attachment=True)
+    return render_template('reports.html', data=data, report_type=report_type)

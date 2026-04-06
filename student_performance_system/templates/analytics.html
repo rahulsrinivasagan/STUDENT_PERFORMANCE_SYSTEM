@@ -3,86 +3,172 @@
 {% block title %}Analytics - Student Performance Analysis System{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h2>Performance Analytics</h2>
-                <p class="text-muted">Visual insights into learning performance.</p>
-            </div>
-            <a href="JavaScript:history.back()" class="btn btn-outline-secondary">Go Back</a>
-        </div>
-    </div>
-</div>
-
-{% if data %}
-<div class="row g-4">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-body">
-                <div class="chart-container" style="height: 400px; position: relative;">
-                    <canvas 
-                        id=\"mainChart\" 
-                        data-role=\"{{ role }}\" 
-                        data-chart-data=\"{{ data|tojson|replace('\"', '&quot;') }}\"
-                        style=\"max-height: 400px;\"></canvas>
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="display-5 mb-1">📊 Performance Analytics</h1>
+                            <p class="mb-0">Visual insights into learning performance across subjects</p>
+                        </div>
+                        <a href="JavaScript:history.back()" class="btn btn-light btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header bg-light">
-                <h5 class="card-title mb-0">{{ 'My Performance' if role == 'student' else 'Students Performance' if role == 'teacher' else 'System Overview' }}</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    {% for item in data %}
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="mb-1">{{ item.subject }}</h6>
-                                {% if role == 'student' %}
-                                    <small class="text-muted">Avg: {{ "%.1f"|format(item.avg_score) }} • Attempts: {{ item.attempts }}</small>
-                                {% elif role == 'teacher' %}
-                                    <small class="text-muted">Students: {{ item.students }} • Avg: {{ "%.1f"|format(item.avg_score) }}</small>
-                                {% else %}
-                                    <small class="text-muted">Attempts: {{ item.total_attempts }} • Avg: {{ "%.1f"|format(item.avg_score) }}</small>
-                                {% endif %}
+
+    {% if data %}
+    <div class="row g-4">
+        <!-- Charts Section -->
+        <div class="col-12" id="chartsContainer">
+            <!-- Charts will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="col-12">
+            <div class="row g-3">
+                {% for item in data %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-primary">{{ item.subject }}</h5>
+                                <div class="row text-center">
+                                    {% if role == 'student' %}
+                                        <div class="col-6">
+                                            <h4 class="text-success">{{ "%.1f"|format(item.avg_score) }}%</h4>
+                                            <small class="text-muted">Avg Score</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <h4 class="text-info">{{ item.attempts }}</h4>
+                                            <small class="text-muted">Attempts</small>
+                                        </div>
+                                    {% elif role == 'teacher' %}
+                                        <div class="col-6">
+                                            <h4 class="text-success">{{ item.students }}</h4>
+                                            <small class="text-muted">Students</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <h4 class="text-warning">{{ "%.1f"|format(item.avg_score) }}%</h4>
+                                            <small class="text-muted">Avg Score</small>
+                                        </div>
+                                    {% else %}
+                                        <div class="col-6">
+                                            <h4 class="text-primary">{{ item.total_attempts }}</h4>
+                                            <small class="text-muted">Attempts</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <h4 class="text-success">{{ "%.1f"|format(item.avg_score) }}%</h4>
+                                            <small class="text-muted">Avg Score</small>
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </div>
-                            <span class="badge bg-primary">{{ "%.0f"|format(item.avg_score if item.avg_score else 0) }}%</span>
                         </div>
                     </div>
-                    {% endfor %}
-                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
-</div>
-{% else %}
-<div class="card">
-    <div class="card-body text-center py-5">
-        <p class="text-muted mb-0">📊 No data available yet. Complete some quizzes to see analytics.</p>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No Data Available</h4>
+            <p class="text-muted mb-0">Complete some quizzes to see analytics and performance insights.</p>
+        </div>
     </div>
+    {% endif %}
 </div>
-{% endif %}
+
+<style>
+.bg-gradient-info {
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+}
+
+.card {
+    border-radius: 15px;
+}
+
+.chart-container {
+    margin-bottom: 2rem;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('mainChart');
-    if (!canvas) return;
+    const dataStr = canvas ? canvas.getAttribute('data-chart-data') : null;
+    const role = canvas ? canvas.getAttribute('data-role') : null;
+    const data_items = dataStr ? JSON.parse(dataStr) : [];
+    const container = document.getElementById('chartsContainer');
     
-    const role = canvas.getAttribute('data-role');
-    const chartDataStr = canvas.getAttribute('data-chart-data');
-    const data_items = JSON.parse(chartDataStr);
-    const ctx = canvas.getContext('2d');
+    if (!container || !data_items.length) return;
     
-    let chartConfig = {};
+    let chartHTML = '';
     
     if (role === 'student') {
-        chartConfig = {
+        chartHTML = `
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h4 class="card-title mb-0">📈 My Performance Across Subjects</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="mainChart" style="max-height: 400px;"></canvas>
+                </div>
+            </div>
+        `;
+    } else if (role === 'teacher') {
+        chartHTML = `
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">📊 Average Scores by Subject</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="barChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">🥧 Student Distribution</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="pieChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else if (role === 'admin') {
+        chartHTML = `
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h4 class="card-title mb-0">📊 System-wide Quiz Attempts</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="mainChart" style="max-height: 400px;"></canvas>
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = chartHTML;
+    
+    // Create charts
+    if (role === 'student') {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: data_items.map(d => d.subject),
@@ -99,19 +185,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     y: { beginAtZero: true, max: 100 }
                 }
             }
-        };
+        });
     } else if (role === 'teacher') {
-        chartConfig = {
-            type: 'line',
+        // Bar chart for average scores
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
             data: {
                 labels: data_items.map(d => d.subject),
                 datasets: [{
-                    label: 'Average Student Score',
+                    label: 'Average Score',
                     data: data_items.map(d => d.avg_score),
-                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 2,
-                    fill: false
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
                 }]
             },
             options: {
@@ -119,9 +206,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     y: { beginAtZero: true, max: 100 }
                 }
             }
-        };
+        });
+        
+        // Pie chart for student distribution
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: data_items.map(d => d.subject),
+                datasets: [{
+                    label: 'Students',
+                    data: data_items.map(d => d.students),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 205, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(153, 102, 255, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 205, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            }
+        });
     } else if (role === 'admin') {
-        chartConfig = {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        new Chart(ctx, {
             type: 'pie',
             data: {
                 labels: data_items.map(d => d.subject),
@@ -143,10 +259,99 @@ document.addEventListener('DOMContentLoaded', function() {
                     borderWidth: 1
                 }]
             }
-        };
+        });
     }
-    
-    new Chart(ctx, chartConfig);
+});
+</script>
+        // Create multiple charts for teacher
+        const container = document.querySelector('.chart-container');
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-center mb-3">Average Scores by Subject</h5>
+                    <canvas id="barChart" style="max-height: 300px;"></canvas>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="text-center mb-3">Student Distribution</h5>
+                    <canvas id="pieChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        `;
+        
+        // Bar chart for average scores
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: data_items.map(d => d.subject),
+                datasets: [{
+                    label: 'Average Score',
+                    data: data_items.map(d => d.avg_score),
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true, max: 100 }
+                }
+            }
+        });
+        
+        // Pie chart for student distribution
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: data_items.map(d => d.subject),
+                datasets: [{
+                    label: 'Students',
+                    data: data_items.map(d => d.students),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 205, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(153, 102, 255, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 205, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            }
+        });
+    } else if (role === 'admin') {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: data_items.map(d => d.subject),
+                datasets: [{
+                    label: 'Total Attempts',
+                    data: data_items.map(d => d.total_attempts),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 205, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 205, 86, 1)',
+                        'rgba(75, 192, 192, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            }
+        });
+    }
 });
 </script>
 {% endblock %}
